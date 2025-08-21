@@ -15,7 +15,8 @@ interface StudyGenieLayoutProps {
   onViewChange?: (view: string) => void;
 }
 
-export function StudyGenieLayout({ onViewChange }: StudyGenieLayoutProps = {}) {
+export function StudyGenieLayout(props: StudyGenieLayoutProps = {}) {
+  const { onViewChange } = props;
   const [currentView, setCurrentView] = useState("upload");
   const [mounted, setMounted] = useState(false);
 
@@ -70,10 +71,8 @@ export function StudyGenieLayout({ onViewChange }: StudyGenieLayoutProps = {}) {
         <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-gradient-glass backdrop-blur-lg border-b border-glass-border">
           <div className="flex items-center justify-between h-full px-4">
             <div className="flex items-center gap-3">
-              <SidebarTrigger asChild>
-                <Button variant="ghost" size="icon" className="glass-hover">
-                  <Menu className="w-5 h-5" />
-                </Button>
+              <SidebarTrigger>
+                <Menu className="w-5 h-5" />
               </SidebarTrigger>
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold gradient-text">
