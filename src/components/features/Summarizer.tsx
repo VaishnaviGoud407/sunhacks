@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FileText, Loader2, Sparkles } from "lucide-react";
+import { FileText, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useNotes } from "@/contexts/NotesContext";
 
 interface SummaryResult {
   summary: string;
@@ -13,17 +13,18 @@ interface SummaryResult {
 }
 
 export function Summarizer() {
-  const [inputText, setInputText] = useState("");
+  const { getNotesContent, uploadedFiles } = useNotes();
   const [language, setLanguage] = useState("english");
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<SummaryResult | null>(null);
   const { toast } = useToast();
 
   const handleSummarize = async () => {
-    if (!inputText.trim()) {
+    const notesContent = getNotesContent();
+    if (!notesContent.trim()) {
       toast({
-        title: "Input required",
-        description: "Please enter some text to summarize",
+        title: "No notes available",
+        description: "Please upload some study materials first",
         variant: "destructive",
       });
       return;
@@ -79,17 +80,36 @@ export function Summarizer() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Input Text
+              Your Uploaded Notes
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea
-              placeholder="Paste your text here to get an AI-powered summary..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              className="min-h-[300px] bg-background/50 border-muted"
-              rows={12}
-            />
+            {uploadedFiles.length > 0 ? (
+              <div className="space-y-3">
+                <div className="max-h-[300px] overflow-y-auto space-y-2">
+                  {uploadedFiles.map((file) => (
+                    <div key={file.id} className="p-3 rounded-lg border bg-background/50">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        <span className="text-sm font-medium">{file.name}</span>
+                        {file.uploaded && <span className="text-xs text-green-500">✓ Ready</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {uploadedFiles.filter(f => f.uploaded).length} files ready for summarization
+                </p>
+              </div>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-center">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-muted-foreground">No notes uploaded yet</p>
+                  <p className="text-sm text-muted-foreground">Go to Upload Notes to add your study materials</p>
+                </div>
+              </div>
+            )}
             
             <div className="flex gap-3">
               <Select value={language} onValueChange={setLanguage}>
@@ -105,7 +125,7 @@ export function Summarizer() {
 
               <Button 
                 onClick={handleSummarize} 
-                disabled={isLoading || !inputText.trim()}
+                disabled={isLoading || uploadedFiles.filter(f => f.uploaded).length === 0}
                 className="bg-gradient-primary hover:opacity-90 flex-1"
               >
                 {isLoading ? (
@@ -116,7 +136,7 @@ export function Summarizer() {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Summarize
+                    Summarize Notes
                   </>
                 )}
               </Button>

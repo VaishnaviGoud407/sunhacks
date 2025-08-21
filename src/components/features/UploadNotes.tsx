@@ -3,17 +3,10 @@ import { Upload, File, X, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  uploaded: boolean;
-}
+import { useNotes, UploadedFile } from "@/contexts/NotesContext";
 
 export function UploadNotes() {
-  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const { uploadedFiles: files, addFiles, removeFile, updateFile } = useNotes();
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -27,18 +20,15 @@ export function UploadNotes() {
       size: file.size,
       type: file.type,
       uploaded: false,
+      content: `Sample extracted content from ${file.name}. This would be the actual text content extracted from your uploaded file using OCR for images or text extraction for PDFs. The content would be processed and made available for summarization, quiz generation, and flashcard creation.`
     }));
 
-    setFiles((prev) => [...prev, ...newFiles]);
+    addFiles(newFiles);
 
-    // Simulate upload
+    // Simulate upload and content extraction
     newFiles.forEach((file, index) => {
       setTimeout(() => {
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === file.id ? { ...f, uploaded: true } : f
-          )
-        );
+        updateFile(file.id, { uploaded: true });
       }, 1000 * (index + 1));
     });
 
@@ -46,10 +36,6 @@ export function UploadNotes() {
       title: "Files uploading...",
       description: `${newFiles.length} file(s) being processed`,
     });
-  };
-
-  const removeFile = (id: string) => {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
   const formatFileSize = (bytes: number) => {

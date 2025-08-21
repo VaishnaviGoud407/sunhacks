@@ -8,6 +8,7 @@ import { Flashcards } from "./features/Flashcards";
 import { InteractiveTutor } from "./features/InteractiveTutor";
 import { Translator } from "./features/Translator";
 import { Dashboard } from "./features/Dashboard";
+import { NotesProvider } from "@/contexts/NotesContext";
 import { Button } from "@/components/ui/button";
 import { Menu, Sparkles } from "lucide-react";
 
@@ -65,39 +66,41 @@ export function StudyGenieLayout(props: StudyGenieLayoutProps = {}) {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-hero">
-        {/* Global header with sidebar trigger */}
-        <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-gradient-glass backdrop-blur-lg border-b border-glass-border">
-          <div className="flex items-center justify-between h-full px-4">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger>
-                <Menu className="w-5 h-5" />
-              </SidebarTrigger>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold gradient-text">
-                  📚 StudyGenie – Personalized Study Guide Generator
-                </h1>
+    <NotesProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gradient-hero">
+          {/* Global header with sidebar trigger */}
+          <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-gradient-glass backdrop-blur-lg border-b border-glass-border">
+            <div className="flex items-center justify-between h-full px-4">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger>
+                  <Menu className="w-5 h-5" />
+                </SidebarTrigger>
+                <div className="hidden sm:block">
+                  <h1 className="text-lg font-bold gradient-text">
+                    📚 StudyGenie – Personalized Study Guide Generator
+                  </h1>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:inline">Built at SUNHACKS 2025 – GenAI Track</span>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Built at SUNHACKS 2025 – GenAI Track</span>
+          </header>
+
+          {/* Sidebar */}
+          <StudyGenieSidebar onViewChange={handleViewChange} currentView={currentView} />
+
+          {/* Main content */}
+          <main className="flex-1 pt-14">
+            <div className="container mx-auto p-6">
+              {renderCurrentView()}
             </div>
-          </div>
-        </header>
-
-        {/* Sidebar */}
-        <StudyGenieSidebar onViewChange={handleViewChange} currentView={currentView} />
-
-        {/* Main content */}
-        <main className="flex-1 pt-14">
-          <div className="container mx-auto p-6">
-            {renderCurrentView()}
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+          </main>
+        </div>
+      </SidebarProvider>
+    </NotesProvider>
   );
 }

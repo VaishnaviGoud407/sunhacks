@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { HelpCircle, CheckCircle, XCircle, Trophy, RotateCcw } from "lucide-react";
+import { HelpCircle, CheckCircle, XCircle, Trophy, RotateCcw, FileText, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useNotes } from "@/contexts/NotesContext";
 
 interface Question {
   id: number;
@@ -23,7 +23,7 @@ interface QuizResult {
 }
 
 export function QuizGenerator() {
-  const [inputText, setInputText] = useState("");
+  const { getNotesContent, uploadedFiles } = useNotes();
   const [numQuestions, setNumQuestions] = useState("5");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -34,10 +34,11 @@ export function QuizGenerator() {
   const { toast } = useToast();
 
   const generateQuiz = async () => {
-    if (!inputText.trim()) {
+    const notesContent = getNotesContent();
+    if (!notesContent.trim()) {
       toast({
-        title: "Input required",
-        description: "Please enter some text to generate quiz from",
+        title: "No notes available",
+        description: "Please upload some study materials first",
         variant: "destructive",
       });
       return;
@@ -137,36 +138,52 @@ export function QuizGenerator() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="quiz-text">Study Material</Label>
-              <Textarea
-                id="quiz-text"
-                placeholder="Paste your study material here to generate quiz questions..."
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="min-h-[200px] mt-2 bg-background/50"
-                rows={8}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="num-questions">Number of Questions</Label>
-                <Input
-                  id="num-questions"
-                  type="number"
-                  min="3"
-                  max="20"
-                  value={numQuestions}
-                  onChange={(e) => setNumQuestions(e.target.value)}
-                  className="mt-2"
-                />
+            {uploadedFiles.length > 0 ? (
+              <div className="space-y-3">
+                <div>
+                  <Label>Your Uploaded Notes</Label>
+                  <div className="mt-2 max-h-[200px] overflow-y-auto space-y-2">
+                    {uploadedFiles.map((file) => (
+                      <div key={file.id} className="p-3 rounded-lg border bg-background/50">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          <span className="text-sm font-medium">{file.name}</span>
+                          {file.uploaded && <span className="text-xs text-green-500">✓ Ready</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {uploadedFiles.filter(f => f.uploaded).length} files ready for quiz generation
+                  </p>
+                </div>
               </div>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center">
+                <div className="text-center">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-muted-foreground">No notes uploaded yet</p>
+                  <p className="text-sm text-muted-foreground">Go to Upload Notes to add your study materials</p>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="num-questions">Number of Questions</Label>
+              <Input
+                id="num-questions"
+                type="number"
+                min="3"
+                max="20"
+                value={numQuestions}
+                onChange={(e) => setNumQuestions(e.target.value)}
+                className="mt-2"
+              />
             </div>
 
             <Button 
               onClick={generateQuiz} 
-              disabled={isGenerating || !inputText.trim()}
+              disabled={isGenerating || uploadedFiles.filter(f => f.uploaded).length === 0}
               className="w-full bg-gradient-primary hover:opacity-90"
             >
               {isGenerating ? (
@@ -177,7 +194,7 @@ export function QuizGenerator() {
               ) : (
                 <>
                   <HelpCircle className="w-4 h-4 mr-2" />
-                  Generate Quiz
+                  Generate Quiz from Notes
                 </>
               )}
             </Button>

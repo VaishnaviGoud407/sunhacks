@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { CreditCard, ChevronLeft, ChevronRight, RotateCcw, Plus } from "lucide-react";
+import { CreditCard, ChevronLeft, ChevronRight, RotateCcw, Plus, FileText, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useNotes } from "@/contexts/NotesContext";
 
 interface Flashcard {
   id: number;
@@ -14,7 +14,7 @@ interface Flashcard {
 }
 
 export function Flashcards() {
-  const [inputText, setInputText] = useState("");
+  const { getNotesContent, uploadedFiles } = useNotes();
   const [numCards, setNumCards] = useState("10");
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -24,10 +24,11 @@ export function Flashcards() {
   const { toast } = useToast();
 
   const generateFlashcards = async () => {
-    if (!inputText.trim()) {
+    const notesContent = getNotesContent();
+    if (!notesContent.trim()) {
       toast({
-        title: "Input required",
-        description: "Please enter some text to generate flashcards from",
+        title: "No notes available",
+        description: "Please upload some study materials first",
         variant: "destructive",
       });
       return;
@@ -132,17 +133,35 @@ export function Flashcards() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="flashcard-text">Study Material</Label>
-              <Textarea
-                id="flashcard-text"
-                placeholder="Paste your study material here to generate flashcards..."
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="min-h-[200px] mt-2 bg-background/50"
-                rows={8}
-              />
-            </div>
+            {uploadedFiles.length > 0 ? (
+              <div className="space-y-3">
+                <div>
+                  <Label>Your Uploaded Notes</Label>
+                  <div className="mt-2 max-h-[200px] overflow-y-auto space-y-2">
+                    {uploadedFiles.map((file) => (
+                      <div key={file.id} className="p-3 rounded-lg border bg-background/50">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          <span className="text-sm font-medium">{file.name}</span>
+                          {file.uploaded && <span className="text-xs text-green-500">✓ Ready</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {uploadedFiles.filter(f => f.uploaded).length} files ready for flashcard generation
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center">
+                <div className="text-center">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-muted-foreground">No notes uploaded yet</p>
+                  <p className="text-sm text-muted-foreground">Go to Upload Notes to add your study materials</p>
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="num-cards">Number of Flashcards</Label>
@@ -159,7 +178,7 @@ export function Flashcards() {
 
             <Button 
               onClick={generateFlashcards} 
-              disabled={isGenerating || !inputText.trim()}
+              disabled={isGenerating || uploadedFiles.filter(f => f.uploaded).length === 0}
               className="w-full bg-gradient-primary hover:opacity-90"
             >
               {isGenerating ? (
@@ -170,7 +189,7 @@ export function Flashcards() {
               ) : (
                 <>
                   <Plus className="w-4 h-4 mr-2" />
-                  Generate Flashcards
+                  Generate Flashcards from Notes
                 </>
               )}
             </Button>
